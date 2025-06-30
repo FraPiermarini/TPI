@@ -4,11 +4,13 @@ import Modelo.*;
 import Vista.VistaTorneo;
 
 import java.util.ArrayList;
-import java.util.Scanner;
+
 
 public class ControladorTorneo {
     private ArrayList<Equipo> equipos = new ArrayList<>();
     private ArrayList<Partido> partidos = new ArrayList<>();
+    private ArrayList<Equipo> zonaA = new ArrayList<>();
+    private ArrayList<Equipo> zonaB = new ArrayList<>();
     private VistaTorneo vista = new VistaTorneo();
 
     public void iniciar() {
@@ -28,12 +30,21 @@ public class ControladorTorneo {
                     generarFixture();
                     break;
                 case 4:
-                    registrarResultado();
+                    mostrarEquiposPorZona();
                     break;
                 case 5:
-                    mostrarTablaPosiciones();
+                    mostrarJugadoresEquipo();
                     break;
                 case 6:
+                    buscarEquipoJugador();
+                    break;
+                case 7:
+                    registrarResultado();
+                    break;
+                case 8:
+                    mostrarTablaPosiciones();
+                    break;
+                case 9:
                     mostrarEstadisticas();
                     break;
                 case 0:
@@ -67,19 +78,8 @@ public class ControladorTorneo {
         equipo.agregarJugador(new Jugador(nombreJugador, equipo));
         vista.mostrarMensaje("Jugador registrado en " + equipo.getNombre());
     }
-
-    private Equipo buscarEquipo(String nombre) {
-        for (Equipo e : equipos) {
-            if (e.getNombre().equalsIgnoreCase(nombre)) {
-                return e;
-            }
-        }
-        return null;
-    }
-
     public void generarFixture() {
-        ArrayList<Equipo> zonaA = new ArrayList<>();
-        ArrayList<Equipo> zonaB = new ArrayList<>();
+
 
         for (Equipo e : equipos) {
             if (e.getZona().equalsIgnoreCase("A")) {
@@ -109,6 +109,56 @@ public class ControladorTorneo {
             }
         }
     }
+
+    private Equipo buscarEquipo(String nombre) {
+        for (Equipo e : equipos) {
+            if (e.getNombre().equalsIgnoreCase(nombre)) {
+                return e;
+            }
+        }
+        return null;
+    }
+    public void mostrarEquiposPorZona() {
+        vista.mostrarMensaje("Equipos en Zona A:");
+        for (Equipo e : zonaA) {
+            vista.mostrarMensaje("- " + e.getNombre());
+        }
+
+        vista.mostrarMensaje("Equipos en Zona B:");
+        for (Equipo e : zonaB) {
+            vista.mostrarMensaje("- " + e.getNombre());
+        }
+    }
+    public void mostrarJugadoresEquipo() {
+        String nombreEquipo = vista.pedirNombreEquipo();
+        Equipo equipo = buscarEquipo(nombreEquipo);
+
+        if (equipo == null) {
+            vista.mostrarMensaje("El equipo no existe.");
+            return;
+        }
+
+        vista.mostrarMensaje("Jugadores de " + equipo.getNombre() + ":");
+        for (Jugador j : equipo.getJugadores()) {
+            vista.mostrarMensaje("- " + j.getNombre());
+        }
+    }
+    public void buscarEquipoJugador() {
+        String nombreJugador = vista.pedirNombreJugador();
+
+        for (Equipo e : equipos) {
+            for (Jugador j : e.getJugadores()) {
+                if (j.getNombre().equalsIgnoreCase(nombreJugador)) {
+                    vista.mostrarMensaje(nombreJugador + " pertenece al equipo " + e.getNombre());
+                    return;
+                }
+            }
+        }
+
+        vista.mostrarMensaje("No se encontró al jugador.");
+    }
+
+    
 
     public void registrarResultado() {
         ArrayList<Partido> disponibles = new ArrayList<>();

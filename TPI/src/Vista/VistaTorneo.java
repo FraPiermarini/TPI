@@ -10,9 +10,12 @@ public class VistaTorneo {
         System.out.println("1 - Registrar equipo");
         System.out.println("2 - Registrar jugador");
         System.out.println("3 - Generar fixture automático");
-        System.out.println("4 - Cargar resultado de un partido");
-        System.out.println("5 - Ver tabla de posiciones");
-        System.out.println("6 - Ver estadísticas de jugadores");
+        System.out.println("4- Mostrar Equipos por Zona");
+        System.out.println("5- Mostrar Jugadores por Equipo");
+        System.out.println("6- Mostrar Equipo de un Jugador");
+        System.out.println("7 - Cargar resultado de un partido");
+        System.out.println("8 - Ver tabla de posiciones");
+        System.out.println("9 - Ver estadísticas de jugadores");
         System.out.println("0 - Salir");
     }
 
