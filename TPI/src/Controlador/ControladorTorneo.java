@@ -1,9 +1,13 @@
 package Controlador;
 
 import Modelo.*;
+import Persistencia.EquipoDAO;
+import Persistencia.JugadorDAO;
+import Persistencia.PartidoDAO;
 import Vista.VistaTorneo;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class ControladorTorneo {
@@ -12,8 +16,34 @@ public class ControladorTorneo {
     private ArrayList<Equipo> zonaA = new ArrayList<>();
     private ArrayList<Equipo> zonaB = new ArrayList<>();
     private VistaTorneo vista = new VistaTorneo();
+    private JugadorDAO jugadorDAO = new JugadorDAO();
+    private EquipoDAO equipoDAO = new EquipoDAO();
+    private PartidoDAO partidoDAO = new PartidoDAO();
 
-    public void iniciar() {
+
+
+    public void cargarEquiposDesdeBD() { //Con este metodo cargamos los equipos en la BD y los separamos por zonas.
+    List<Equipo> desdeBD = equipoDAO.obtenerTodosLosEquipos();
+    for (Equipo e : desdeBD) {
+        equipos.add(e);
+        if (e.getZona().equalsIgnoreCase("A")) {
+            zonaA.add(e);
+        } else if (e.getZona().equalsIgnoreCase("B")) {
+            zonaB.add(e);
+        }
+    }
+    vista.mostrarMensaje("Equipos cargados desde la base de datos.");
+}
+    public void cargarJugadoresDesdeBD() {  //Aca cargamos los jugadores en la base de datos por equipo
+    jugadorDAO.obtenerJugadores(equipos);
+    vista.mostrarMensaje("Jugadores cargados desde la base de datos.");
+    }
+
+
+
+    public void iniciar() {  //Iniciamos el menu
+        cargarEquiposDesdeBD();
+        cargarJugadoresDesdeBD();
         int opcion;
         do {
             vista.mostrarMenu();
@@ -45,7 +75,10 @@ public class ControladorTorneo {
                     mostrarTablaPosiciones();
                     break;
                 case 9:
-                    mostrarEstadisticas();
+                    mostrarResultados();
+                    break;
+                case 10:
+                    mostrarCampeon();
                     break;
                 case 0:
                     vista.mostrarMensaje("Saliendo del sistema.");
@@ -58,27 +91,34 @@ public class ControladorTorneo {
         } while (opcion != 0);
     }
 
-    public void registrarEquipo() {
-        String nombre = vista.pedirNombreEquipo();
-        String zona = vista.pedirZona();
-        equipos.add(new Equipo(nombre, zona));
-        vista.mostrarMensaje("Equipo registrado exitosamente.");
+    public void registrarEquipo() {  //Registramos el equipo y lo guardamos en la BD
+    String nombre = vista.pedirNombreEquipo();
+    String zona = vista.pedirZona();
+
+    Equipo equipo = new Equipo(nombre, zona);
+    equipos.add(equipo);
+    equipoDAO.guardarEquipo(equipo); 
+
+    vista.mostrarMensaje("Equipo registrado exitosamente.");
+}
+
+    public void registrarJugador() { //Registramos un jugador de un equipo y lo guardamos en la bd
+    String nombreJugador = vista.pedirNombreJugador();
+    String nombreEquipo = vista.pedirNombreEquipo();
+
+    Equipo equipo = buscarEquipo(nombreEquipo);
+    if (equipo == null) {
+        vista.mostrarMensaje("El equipo no existe.");
+        return;
     }
 
-    public void registrarJugador() {
-        String nombreJugador = vista.pedirNombreJugador();
-        String nombreEquipo = vista.pedirNombreEquipo();
+    Jugador jugador = new Jugador(nombreJugador, equipo);
+    equipo.agregarJugador(jugador);
+    jugadorDAO.guardarJugador(jugador); // 
 
-        Equipo equipo = buscarEquipo(nombreEquipo);
-        if (equipo == null) {
-            vista.mostrarMensaje("El equipo no existe.");
-            return;
-        }
-
-        equipo.agregarJugador(new Jugador(nombreJugador, equipo));
-        vista.mostrarMensaje("Jugador registrado en " + equipo.getNombre());
-    }
-    public void generarFixture() {
+    vista.mostrarMensaje("Jugador registrado en " + equipo.getNombre());
+}
+    public void generarFixture() {  //Generamos el fixture de partidos y lo guardamos en la BD
 
 
         for (Equipo e : equipos) {
@@ -91,11 +131,13 @@ public class ControladorTorneo {
 
         generarPartidosPorZona(zonaA, "Zona A");
         generarPartidosPorZona(zonaB, "Zona B");
+        partidoDAO.guardarPartidos(partidos);
+
 
         vista.mostrarMensaje("Fixture generado correctamente por zonas.");
     }
 
-    private void generarPartidosPorZona(ArrayList<Equipo> zona, String nombreZona) {
+    private void generarPartidosPorZona(ArrayList<Equipo> zona, String nombreZona) {  //Genera todos los posibles partidos de cada zona
         int fecha = 1;
 
         for (int i = 0; i < zona.size(); i++) {
@@ -110,7 +152,7 @@ public class ControladorTorneo {
         }
     }
 
-    private Equipo buscarEquipo(String nombre) {
+    private Equipo buscarEquipo(String nombre) {  //Busca un equipo 
         for (Equipo e : equipos) {
             if (e.getNombre().equalsIgnoreCase(nombre)) {
                 return e;
@@ -118,7 +160,7 @@ public class ControladorTorneo {
         }
         return null;
     }
-    public void mostrarEquiposPorZona() {
+    public void mostrarEquiposPorZona() {  //Muestra los equipos por cada zona
         vista.mostrarMensaje("Equipos en Zona A:");
         for (Equipo e : zonaA) {
             vista.mostrarMensaje("- " + e.getNombre());
@@ -129,7 +171,7 @@ public class ControladorTorneo {
             vista.mostrarMensaje("- " + e.getNombre());
         }
     }
-    public void mostrarJugadoresEquipo() {
+    public void mostrarJugadoresEquipo() {  //Muestra los jugadores de cada equipo
         String nombreEquipo = vista.pedirNombreEquipo();
         Equipo equipo = buscarEquipo(nombreEquipo);
 
@@ -143,7 +185,7 @@ public class ControladorTorneo {
             vista.mostrarMensaje("- " + j.getNombre());
         }
     }
-    public void buscarEquipoJugador() {
+    public void buscarEquipoJugador() { //Muestra el equipo de un jugador determinado
         String nombreJugador = vista.pedirNombreJugador();
 
         for (Equipo e : equipos) {
@@ -158,9 +200,9 @@ public class ControladorTorneo {
         vista.mostrarMensaje("No se encontró al jugador.");
     }
 
-    
 
-    public void registrarResultado() {
+
+    public void registrarResultado() { //Recorre los partidos generados  y cargamos los resultados
         ArrayList<Partido> disponibles = new ArrayList<>();
 
         for (Partido p : partidos) {
@@ -191,10 +233,14 @@ public class ControladorTorneo {
         int golesVisitante = vista.pedirGoles(partidoElegido.getEquipoVisitante().getNombre());
 
         partidoElegido.registrarResultado(golesLocal, golesVisitante);
+        partidoDAO.actualizarResultado(partidoElegido);
+        equipoDAO.actualizarEquipo(partidoElegido.getEquipoLocal());
+        equipoDAO.actualizarEquipo(partidoElegido.getEquipoVisitante());
+
         vista.mostrarMensaje("Resultado registrado correctamente.");
     }
 
-    public void mostrarTablaPosiciones() {
+    public void mostrarTablaPosiciones() {  //Muestra una tabla de posicion en general
         vista.mostrarMensaje("Tabla de Posiciones");
 
         for (int i = 0; i < equipos.size() - 1; i++) {
@@ -209,17 +255,38 @@ public class ControladorTorneo {
             vista.mostrarMensaje((i + 1) + "° " + equipos.get(i).getNombre() + ": " + equipos.get(i).getPuntos() + " pts");
         }
     }
+    public void mostrarResultados() {  //Muestra todos los resultados de los partidos
+        boolean hayResultados = false;
 
-    public void mostrarEstadisticas() {
-        for (Equipo e : equipos) {
-            vista.mostrarMensaje("Jugadores de " + e.getNombre() + ":");
-            for (Jugador j : e.getJugadores()) {
-                String info = "- " + j.getNombre() +
-                              "Goles: " + j.getGoles() +
-                              "Amarillas: " + j.getAmarillas() +
-                              "Rojas: " + j.getRojas();
-                vista.mostrarMensaje(info);
+        for (Partido p : partidos) {
+            if (p.fueJugado()) {
+                String resultado = " " + p.getEquipoLocal().getNombre() + " "
+                    + p.getGolesLocal() + " - " + p.getGolesVisitante() + " "
+                    + p.getEquipoVisitante().getNombre() + " (" + p.getFecha() + ")";
+                vista.mostrarMensaje(resultado);
+                hayResultados = true;
             }
         }
+
+        if (!hayResultados) {
+            vista.mostrarMensaje("Todavía no hay resultados registrados.");
+        }
     }
+    public void mostrarCampeon() {  //Muestra al campeon del torneo
+        if (equipos.isEmpty()) {
+            vista.mostrarMensaje("No hay equipos registrados.");
+            return;
+        }
+
+        Equipo campeon = equipos.get(0);
+
+        for (Equipo e : equipos) {
+            if (e.getPuntos() > campeon.getPuntos()) {
+                campeon = e;
+            }
+        }
+
+        vista.mostrarMensaje("Campeón del Torneo: " + campeon.getNombre() + " con " + campeon.getPuntos() + " puntos.");
+    }
+
 }

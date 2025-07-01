@@ -15,7 +15,8 @@ public class VistaTorneo {
         System.out.println("6- Mostrar Equipo de un Jugador");
         System.out.println("7 - Cargar resultado de un partido");
         System.out.println("8 - Ver tabla de posiciones");
-        System.out.println("9 - Ver estadísticas de jugadores");
+        System.out.println("9- Mostrar Resultados de todos los Partidos");
+        System.out.println("10- Mostrar Equipo campeon");
         System.out.println("0 - Salir");
     }
 
