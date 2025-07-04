@@ -118,39 +118,45 @@ public class ControladorTorneo {
 
     vista.mostrarMensaje("Jugador registrado en " + equipo.getNombre());
 }
-    public void generarFixture() {  //Generamos el fixture de partidos y lo guardamos en la BD
+public void generarFixture() {
+    // Limpiar listas previas para evitar duplicados
+    zonaA.clear();
+    zonaB.clear();
+    partidos.clear();
 
-
-        for (Equipo e : equipos) {
-            if (e.getZona().equalsIgnoreCase("A")) {
-                zonaA.add(e);
-            } else if (e.getZona().equalsIgnoreCase("B")) {
-                zonaB.add(e);
-            }
-        }
-
-        generarPartidosPorZona(zonaA, "Zona A");
-        generarPartidosPorZona(zonaB, "Zona B");
-        partidoDAO.guardarPartidos(partidos);
-
-
-        vista.mostrarMensaje("Fixture generado correctamente por zonas.");
-    }
-
-    private void generarPartidosPorZona(ArrayList<Equipo> zona, String nombreZona) {  //Genera todos los posibles partidos de cada zona
-        int fecha = 1;
-
-        for (int i = 0; i < zona.size(); i++) {
-            for (int j = i + 1; j < zona.size(); j++) {
-                Equipo local = zona.get(i);
-                Equipo visitante = zona.get(j);
-                String Numerofecha = "Fecha " + fecha;
-
-                partidos.add(new Partido(local, visitante, Numerofecha));
-                fecha = (fecha % 14) + 1;
-            }
+    // Clasificar equipos por zona
+    for (Equipo e : equipos) {
+        if (e.getZona().equalsIgnoreCase("A")) {
+            zonaA.add(e);
+        } else if (e.getZona().equalsIgnoreCase("B")) {
+            zonaB.add(e);
         }
     }
+
+    // Generar partidos por zona
+    generarPartidosPorZona(zonaA, "Zona A");
+    generarPartidosPorZona(zonaB, "Zona B");
+
+    // Guardar en la base de datos
+    partidoDAO.guardarPartidos(partidos);
+
+    vista.mostrarMensaje("Fixture generado correctamente por zonas.");
+}
+
+private void generarPartidosPorZona(ArrayList<Equipo> zona, String nombreZona) {
+    int fecha = 1;
+
+    for (int i = 0; i < zona.size(); i++) {
+        for (int j = i + 1; j < zona.size(); j++) {
+            Equipo local = zona.get(i);
+            Equipo visitante = zona.get(j);
+            String numeroFecha = "Fecha " + fecha;
+
+            partidos.add(new Partido(local, visitante, numeroFecha));
+            fecha++;
+        }
+    }
+}
 
     private Equipo buscarEquipo(String nombre) {  //Busca un equipo 
         for (Equipo e : equipos) {
